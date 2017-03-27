@@ -1,0 +1,15 @@
+# Eclipse files
+.project
+.settings
+
+# Node files
+node_modules
+
+# Source (original data files)
+source
+
+# Working directory
+.tmp
+
+# Ignored target
+target/*.esp
