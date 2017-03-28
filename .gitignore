@@ -5,8 +5,11 @@
 # Node files
 node_modules
 
-# Source (original data files)
+# Source (original translations)
 source
+
+# Shadow folder (plugin data files)
+shadow
 
 # Working directory
 .tmp

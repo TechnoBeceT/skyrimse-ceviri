@@ -1,6 +1,7 @@
 'use strict';
 var fs = require('fs'),
-    path = require('path');
+    path = require('path'),
+    iconv = require('iconv-lite');
 
 /**
  * Strings parsing handler.
@@ -54,7 +55,7 @@ class StringsParser {
                 end++;
             }
         }
-        return this.buffer.toString(this.encoding, start, end);
+        return iconv.decode(this.buffer.slice(start, end), this.encoding);
     }
 
 }
@@ -78,18 +79,8 @@ class StringsReader {
 
     readFile(filename, encoding, target) {
         var buffer = fs.readFileSync(filename),
-            padded = path.extname(filename) !== '.STRINGS';
+            padded = path.extname(filename).toLowerCase() !== '.strings';
         return this.readBuffer(buffer, padded, encoding, target);
-    }
-
-    readByModfile(filename, language, encoding, extensions) {
-        var basename = path.basename(filename).replace(/\.[^\.]+$/, '') + '_' + language,
-            dirname = path.join(path.dirname(filename), 'Strings'),
-            strings = {};
-        (extensions || ['.STRINGS', '.DLSTRINGS', '.ILSTRINGS']).forEach((extension) => {
-            this.readFile(path.join(dirname, basename + extension), encoding, strings);
-        });
-        return strings;
     }
 
 }
@@ -159,7 +150,8 @@ class StringsWriter {
     }
 
     writeFile(strings, filename, encoding) {
-        var outputBuffer = this.writeBuffer(strings, path.extname(filename) !== '.STRINGS', encoding);
+        var padded = path.extname(filename).toLowerCase() !== '.strings',
+            outputBuffer = this.writeBuffer(strings, padded, encoding);
         fs.writeFileSync(filename, outputBuffer);
     }
 
