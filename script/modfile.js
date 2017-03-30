@@ -1,106 +1,45 @@
 'use strict';
 /**
- * Walk through ESN and extract various data.
+ * Bake strings into final MODFILE.
  */
-var parseSource = require('./parse/parse-source'),
+var fs = require('fs'),
+    path = require('path'),
+    parseSource = require('./parse/parse-source'),
     parseModfile = require('./parse/parse-modfile'),
     parseStrings = require('./parse/parse-strings'),
-    renderFormId = require('./utils/render-formId'),
-    program = require('commander'),
-    util = require('util'),
-    path = require('path'),
-    fs = require('fs');
+    modfileBake = require('./modfile/bake');
 
-program.
-    option('-m, --modfile <file>', 'Specify modfile to use.').
-    option('-s, --strings <directory>', 'Strings source directory.').
-    option('-l, --language <lang>', 'Language specifier.').
-    option('-o, --output <file>', 'Write output to the specified file.');
+// Resolve directories
+var shadowDirectory = fs.realpathSync('shadow'),
+    targetDirectory = fs.realpathSync('target');
 
-function readStrings() {
-    var modfilePath = program.modfile;
-    if (program.strings) {
-        modfilePath = path.resolve(path.dirname(program.strings), path.basename(program.modfile));
-    }
-    return new parseStrings.StringsReader().readByModfile(modfilePath, program.language || 'en');
+//Define plugins
+var pluginNames = ['Skyrim', 'Update', 'Dawnguard', 'HearthFires', 'Dragonborn'];
+
+// Read strings for plugin with the specified name
+function readStrings(pluginName) {
+	var stringsReader = new parseStrings.StringsReader();
+    return ['.strings', '.dlstrings', '.ilstrings'].reduce((strings, type) => {
+    	var filename = path.join(targetDirectory, 'strings', pluginName.toLowerCase() + '_english' + type);
+        return stringsReader.readFile(filename, null, strings);
+    }, {});
 }
 
-function readModfile(handler) {
-    var modfileSource = new parseSource.FileSource(program.modfile),
-        modfileParser = new parseModfile.ModfileParser(modfileSource);
-    modfileParser.parse(handler);
-    modfileSource.close();
-    return handler;
+// Read plugin modfile using the given handler
+function readModfile(pluginName, handler) {
+	var modfilePath = path.join(shadowDirectory, pluginName + '.esm'),
+		modfileSource = new parseSource.FileSource(modfilePath),
+		modfileParser = new parseModfile.ModfileParser(modfileSource);
+	modfileParser.parse(handler);
+	modfileSource.close();
 }
 
-function writeOutput(data) {
-    if (program.output) {
-        fs.writeFileSync(program.output, data);
-    } else {
-        console.log(data);
-    }
-}
-
-function renderInnrs(innrs) {
-    var rowCount = Math.max.apply(null, innrs.map(part => part.choices.length)),
-        rows = [];
-    innrs.forEach((part) => {
-        for (let i = 0; i < part.choices.length; i++) {
-            rows[i] = (rows[i] || '') + (part.choices[i].name || '') + '\t"' +
-                    part.choices[i].conditions.join('\n') + '"\t';
-        }
-        for (let i = part.choices.length; i < rowCount; i++) {
-            rows[i] = (rows[i] || '') + '\t\t';
-        }
-    });
-    return rows.join('\n');
-}
-
-/**
- * General search command.
- */
-program.
-    command('find <pattern>').
-    description('Find items with the defined HEX pattern in their body.').
-    option('-t, --type <type>', 'Specify entry type to find.').
-    action(() => {
-        var modfileFind = require('./modfile/find'),
-            matchExtractor = readModfile(new modfileFind.MatchExtractor(program.args[1].type, program.args[0])),
-            resultData = [];
-        matchExtractor.result.forEach((match) => {
-            resultData.push(renderFormId(match.formId) + ' [' + parseModfile.MODFILE_TYPES.decode(match.type) + '] ' +
-                    match.editorId);
-        });
-        writeOutput(resultData.join('\n'));
-    });
-
-/**
- * Create 'baked' modfile.
- */
-program.
-    command('bake').
-    description('Produce modfile with baked-in translations.').
-    action(() => {
-        var modfileBake = require('./modfile/bake'),
-            strings = readStrings(),
-            baker = readModfile(new modfileBake.RecordBaker(strings));
-        if (!baker.stack[0].dataIds.length) {
-            throw new Error("No data to bake.");
-        }
-        baker.stack[0].data.unshift(baker.bakeHeader('DEFAULT', path.basename(program.modfile)));
-        fs.writeFileSync(program.output || (program.modfile + '.BAKED'), Buffer.concat(baker.stack[0].data));
-
-    });
-
-/**
- * Fallback command.
- */
-program.
-    action(() => {
-        console.error('[ERROR] Unknown command \'' + program.args[0] + '\'.');
-    });
-
-program.parse(process.argv);
-if (!program.args.length) {
-    program.help();
-}
+var recordBaker = new modfileBake.RecordBaker();
+pluginNames.forEach((pluginName, index) => {
+	recordBaker.strings = readStrings(pluginName);
+	recordBaker.index = index;
+	console.error('Baking plugin ' + pluginName + '.');
+	readModfile(pluginName, recordBaker);
+});
+recordBaker.stack[0].data.unshift(baker.bakeHeader('DEFAULT', pluginNames));
+fs.writeFileSync(path.join(targetDirectory, 'czeskyrimp.esm'), Buffer.concat(recordBaker.stack[0].data));

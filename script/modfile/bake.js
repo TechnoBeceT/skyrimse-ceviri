@@ -26,9 +26,9 @@ var STATIC_VERSION = 0xFFFF;
  */
 class RecordBaker {
 
-    constructor(strings) {
-        this.strings = strings;
-        // Create root context
+    constructor(strings, index) {
+        this.strings = strings || null;
+        this.index = index || 0;
         this.context = {
             _: ROOT_CONTEXT,
             count: 0, // number of baked records
@@ -80,6 +80,9 @@ class RecordBaker {
         if (!BAKED_TYPES[type] && !CONTEXT_TYPES[type]) {
             return; // Not a baked or context record
         }
+    	// Adjust form identifier
+        // TODO XXX FIXME Tohle musi byt podle parenta... :/
+    	formId = (formId & 0x00FFFFFF) + (this.index << 24);
         // Create context
         this.context = {
             _: RECORD_CONTEXT,
@@ -138,7 +141,10 @@ class RecordBaker {
         // Fetch the translation to be baked
         var string = this.strings[stringId];
         if (string === undefined) {
-            throw new Error('Invalid string reference in ' + renderFormId(this.context.formId) + '.');
+        	string = 'INVALID_REF';
+        	console.log(renderFormId(this.context.formId & 0x00FFFFFF));
+        	console.log(renderFormId(this.index << 24));
+            console.error('[WARN] Invalid string reference in ' + renderFormId(this.context.formId) + '.');
         }
         // Remove unsafe characters
         if (this.context.type === MODFILE_TYPES.BOOK) {
@@ -196,56 +202,51 @@ class RecordBaker {
         return baked;
     }
 
-    bakeHeader(author, master) {
+    bakeHeader(author, parents) {
         var root = this.stack[0],
-            length = 24 +
-                /* HEDR */ 20 +
-                /* CNAM */ 7 + Buffer.byteLength(author) +
-                /* MAST */ 7 + Buffer.byteLength(master) +
-                /* DATA */ 12 +
-                /* ONAM */ 6 + root.overrideIds.length * 4 + // XXX
-                /* INTV */ 10,
-            baked = Buffer.alloc(length),
-            offset;
-        // Write record header
-        baked.writeUInt32LE(MODFILE_TYPES.encode('TES4'));
-        baked.writeUInt32LE(length - 24, 4);
-        baked.writeUInt16LE(0x83, 20);
-        offset = 24;
+        	data = [];
         // Write HEDR
-        baked.writeUInt32LE(MODFILE_TYPES.encode('HEDR'), offset);
-        baked.writeUInt16LE(12, offset + 4)
-        baked.writeUInt32LE(0x3F733333, offset + 6);
-        baked.writeInt32LE(root.count, offset + 10);
-        baked.writeUInt32LE(Math.max.apply(null, root.dataIds) + 1, offset + 14);
-        offset += 18;
+        var hedrField = Buffer.alloc(20);
+        hedrField.writeUInt32LE(MODFILE_TYPES.encode('HEDR'));
+        hedrField.writeUInt16LE(12, 4)
+        hedrField.writeUInt32LE(0x3F733333, 6);
+        hedrField.writeInt32LE(root.count, 10);
+        hedrField.writeUInt32LE(root.dataIds.reduce((result, current) => {
+        	return result < current & 0xFFFFFF ? current & 0xFFFFFF : result;
+        }, 0) + 1, 14);
+        data.push(hedrField);
         // Write CNAM
-        baked.writeUInt32LE(MODFILE_TYPES.encode('CNAM'), offset);
-        baked.writeUInt16LE(Buffer.byteLength(author) + 1, offset + 4)
-        baked.write(author, offset + 6);
-        offset += 7 + Buffer.byteLength(author);
+        data.push(this.bakeField(MODFILE_TYPES.encode('CNAM'), author))
         // Write MAST
-        baked.writeUInt32LE(MODFILE_TYPES.encode('MAST'), offset);
-        baked.writeUInt16LE(Buffer.byteLength(master) + 1, offset + 4)
-        baked.write(master, offset + 6);
-        offset += 7 + Buffer.byteLength(master);
-        // Write DATA
-        baked.writeUInt32LE(MODFILE_TYPES.encode('DATA'), offset);
-        baked.writeUInt16LE(8, offset + 4)
-        offset += 14;
-        // Write ONAM
-        baked.writeUInt32LE(MODFILE_TYPES.encode('ONAM'), offset);
-        baked.writeUInt16LE(root.overrideIds.length * 4, offset + 4);
-        root.overrideIds.sort().forEach(formId => {
-            baked.writeUInt32LE(formId, offset + 6);
-            offset += 4;
+        parents.forEach(parent => {
+        	data.push(this.bakeField(MODFILE_TYPES.encode('MAST'), parent + '.esm'));
         });
-        offset += 6;
+        // Write DATA
+        var dataField = Buffer.alloc(12);
+        dataField.writeUInt32LE(MODFILE_TYPES.encode('DATA'));
+        dataField.writeUInt16LE(8, 4)
+        data.push(dataField);
+        // Write ONAM
+        var onamField = Buffer.alloc(6 + root.overrideIds.length * 4);
+        onamField.writeUInt32LE(MODFILE_TYPES.encode('ONAM'));
+        onamField.writeUInt16LE(root.overrideIds.length * 4, 4);
+        root.overrideIds.sort().reduce((offset, formId) => {
+            baked.writeUInt32LE(formId, offset);
+            return offset + 4;
+        }, 6);
+        data.push(onamField);
         // Write INTV
-        baked.writeUInt32LE(MODFILE_TYPES.encode('INTV'), offset);
-        baked.writeUInt16LE(4, offset + 4);
-        baked.writeUInt32LE(1, offset + 6);
-        return baked;
+        var intvField = Buffer.alloc(10);
+        intvField.writeUInt32LE(MODFILE_TYPES.encode('INTV'));
+        intvField.writeUInt16LE(4, 4);
+        intvField.writeUInt32LE(1, 6);
+        // Write field
+        var tes4Field = Buffer.alloc(24);
+        tes4Field.writeUInt32LE(MODFILE_TYPES.encode('TES4'));
+        tes4Field.writeUInt32LE(data.reduce((sum, buffer) => sum + buffer.length, 0), 4);
+        tes4Field.writeUInt16LE(0x83, 20);
+        data.unshift(tes4Field)
+        return Buffer.concat(data);
     }
 
 }
