@@ -6,7 +6,7 @@ var parseModfile = require('../parse/parse-modfile'),
     bakeDefs = require('./bake-defs');
 
 var MODFILE_TYPES = new parseModfile.ModfileType([
-        'GRUP', 'GMST', 'EDID', 'DATA', 'INFO', 'BOOK', 'REFR'
+        'TES4', 'GRUP', 'GMST', 'EDID', 'DATA', 'INFO', 'BOOK', 'REFR', 'MAST'
     ]),
     BAKED_TYPES = new parseModfile.ModfileType(Object.keys(bakeDefs)),
     WATCHED_TYPES = Object.keys(bakeDefs).reduce((watched, type) => {
@@ -22,18 +22,53 @@ var ROOT_CONTEXT = 0,
 var STATIC_VERSION = 0xFFFF;
 
 /**
+ * HEDR field handler.
+ */
+class HeaderHandler {
+
+	constructor() {
+		this.parents = [];
+	}
+
+    handleField(type, size, buffer, offset) {
+    	if (MODFILE_TYPES.MAST !== type) {
+    		return;
+    	}
+    	this.parents.push(buffer.toString('ascii', offset, offset + size - 1));
+    }
+
+    parseParents(plugins, parse) {
+    	var result = [];
+    	parse(this);
+    	this.parents.map(parent => parent.substring(0, parent.length - 4)).forEach((parent, index) => {
+    		result[index] = plugins.indexOf(parent);
+    		console.log(parent + ' is index ' + index + ' and mapped to ' + result[index] + '.');
+    	});
+    	return result;
+    }
+
+}
+
+/**
  * ModfileHandler implementation for baking translations.
  */
 class RecordBaker {
 
-    constructor(strings, index) {
+    constructor(plugins, strings, index) {
+    	// Target parent plugin names
+    	this.plugins = plugins;
+    	// Current plugin strings
         this.strings = strings || null;
+        // Current plugin index
         this.index = index || 0;
+        // Mapping of local index to target indexes
+        this.parents = [];
+        // Baking context stack
         this.context = {
             _: ROOT_CONTEXT,
             count: 0, // number of baked records
             overrideIds: [], // record overrides
-            dataIds: [], // baked formIds
+            dataIds: {}, // baked formIds
             data: [] // baked data
         };
         this.stack = [this.context];
@@ -51,7 +86,7 @@ class RecordBaker {
             label: label,
             count: 0,
             head: null, // context record
-            dataIds: [],
+            dataIds: {},
             data: [],
             bake: false
         };
@@ -67,7 +102,7 @@ class RecordBaker {
         // Check for bake requests
         if (this.context.bake) {
             this.context.parent.bake = true; // Mark parent for baking
-            this.context.parent.dataIds = this.context.parent.dataIds.concat(this.context.dataIds);
+            Object.assign(this.context.parent.dataIds, this.context.dataIds);
             this.context.parent.data.push(this.bakeGroup(this.context));
             this.context.parent.count += this.context.count + this.context.data.length + 1;
         }
@@ -76,13 +111,17 @@ class RecordBaker {
     handleRecord(type, size, flags, formId, parse) {
         // Reset group context record
         this.stack[this.stack.length - 1].head = null;
+        // Parse plugin header
+        if (MODFILE_TYPES.TES4 === type) {
+        	this.parents = new HeaderHandler().parseParents(this.plugins, parse);
+        	return;
+        }
         // Check if the record needs to be processed
         if (!BAKED_TYPES[type] && !CONTEXT_TYPES[type]) {
             return; // Not a baked or context record
         }
     	// Adjust form identifier
-        // TODO XXX FIXME Tohle musi byt podle parenta... :/
-    	formId = (formId & 0x00FFFFFF) + (this.index << 24);
+    	formId = ((this.parents[formId >> 24] || 0) << 24) || (formId & 0x00FFFFFF);
         // Create context
         this.context = {
             _: RECORD_CONTEXT,
@@ -105,18 +144,19 @@ class RecordBaker {
         parse(this);
         this.context = this.stack.pop();
         // Check for bake requests
-        if (this.context.bake) {
+        if (this.context.bake && !this.stack[0].dataIds[formId]) {
             this.context.parent.bake = true; // Mark parent for baking
-            this.context.parent.dataIds.push(this.context.formId);
+            this.context.parent.dataIds[this.context.formId] = true;
             this.context.parent.data.push(this.bakeRecord(this.context));
             if (this.context.type === MODFILE_TYPES.REFR) {
                 this.stack[0].overrideIds.push(this.context.formId);
             }
         } else if (CONTEXT_TYPES[type]) {
             this.context.parent.head = {
-                dataIds: [formId],
+                dataIds: {},
                 data: [this.bakeRecord(this.context)]
             };
+            this.context.parent.head.dataIds[formId] = true;
         }
     }
 
@@ -142,8 +182,6 @@ class RecordBaker {
         var string = this.strings[stringId];
         if (string === undefined) {
         	string = 'INVALID_REF';
-        	console.log(renderFormId(this.context.formId & 0x00FFFFFF));
-        	console.log(renderFormId(this.index << 24));
             console.error('[WARN] Invalid string reference in ' + renderFormId(this.context.formId) + '.');
         }
         // Remove unsafe characters
@@ -181,7 +219,7 @@ class RecordBaker {
         baked.writeUInt32LE(record.type);
         baked.writeUInt32LE(baked.length - 24, 4);
         baked.writeUInt32LE(record.flags, 8);
-        baked.writeUInt32LE(record.formId, 12);
+    	baked.writeUInt32LE(record.formId, 12);
         baked.writeUInt16LE(0x83, 20);
         return baked;
     }
@@ -211,9 +249,7 @@ class RecordBaker {
         hedrField.writeUInt16LE(12, 4)
         hedrField.writeUInt32LE(0x3F733333, 6);
         hedrField.writeInt32LE(root.count, 10);
-        hedrField.writeUInt32LE(root.dataIds.reduce((result, current) => {
-        	return result < current & 0xFFFFFF ? current & 0xFFFFFF : result;
-        }, 0) + 1, 14);
+        hedrField.writeUInt32LE(2048, 14);
         data.push(hedrField);
         // Write CNAM
         data.push(this.bakeField(MODFILE_TYPES.encode('CNAM'), author))
@@ -231,7 +267,7 @@ class RecordBaker {
         onamField.writeUInt32LE(MODFILE_TYPES.encode('ONAM'));
         onamField.writeUInt16LE(root.overrideIds.length * 4, 4);
         root.overrideIds.sort().reduce((offset, formId) => {
-            baked.writeUInt32LE(formId, offset);
+            onamField.writeUInt32LE(formId, offset);
             return offset + 4;
         }, 6);
         data.push(onamField);
@@ -242,7 +278,7 @@ class RecordBaker {
         intvField.writeUInt32LE(1, 6);
         // Write field
         var tes4Field = Buffer.alloc(24);
-        tes4Field.writeUInt32LE(MODFILE_TYPES.encode('TES4'));
+        tes4Field.writeUInt32LE(MODFILE_TYPES.TES4);
         tes4Field.writeUInt32LE(data.reduce((sum, buffer) => sum + buffer.length, 0), 4);
         tes4Field.writeUInt16LE(0x83, 20);
         data.unshift(tes4Field)

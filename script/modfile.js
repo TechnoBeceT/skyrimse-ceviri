@@ -34,12 +34,12 @@ function readModfile(pluginName, handler) {
 	modfileSource.close();
 }
 
-var recordBaker = new modfileBake.RecordBaker();
-pluginNames.forEach((pluginName, index) => {
+var recordBaker = new modfileBake.RecordBaker(pluginNames);
+pluginNames.slice().reverse().forEach(pluginName => {
 	recordBaker.strings = readStrings(pluginName);
-	recordBaker.index = index;
-	console.error('Baking plugin ' + pluginName + '.');
+	recordBaker.index = pluginNames.indexOf(pluginName);
+	console.log('Baking plugin ' + pluginName + ' as index ' + recordBaker.index + '.');
 	readModfile(pluginName, recordBaker);
 });
-recordBaker.stack[0].data.unshift(baker.bakeHeader('DEFAULT', pluginNames));
+recordBaker.stack[0].data.unshift(recordBaker.bakeHeader('DEFAULT', pluginNames));
 fs.writeFileSync(path.join(targetDirectory, 'czeskyrimp.esm'), Buffer.concat(recordBaker.stack[0].data));
