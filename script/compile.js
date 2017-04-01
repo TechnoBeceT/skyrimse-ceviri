@@ -20,6 +20,9 @@ var pluginNames = ['Skyrim', 'Update', 'Dawnguard', 'HearthFires', 'Dragonborn']
 var stringsReader = new parseStrings.StringsReader('cp1250'),
     stringsWriter = new parseStrings.StringsWriter('utf-8');
 
+// Determine whether the strings should have accents removed
+var unaccent = !!process.env.UNACCENT;
+
 // Copy source to target
 pluginNames.forEach(pluginName => {
     ['.strings', '.dlstrings', '.ilstrings'].forEach(type => {
@@ -29,6 +32,11 @@ pluginNames.forEach(pluginName => {
             strings = stringsReader.readFile(input);
         if (fs.existsSync(update)) {
         	Object.assign(strings, require(update));
+        }
+        if (unaccent) {
+        	Object.keys(strings).forEach(key => {
+        		strings[key] = latinize(strings[key]);
+        	});
         }
         stringsWriter.writeFile(strings, output);
     });
