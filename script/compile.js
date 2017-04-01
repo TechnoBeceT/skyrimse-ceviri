@@ -10,6 +10,7 @@ var fs = require('fs'),
 //Resolve directories
 var sourceDirectory = fs.realpathSync('source'),
 	shadowDirectory = fs.realpathSync('shadow'),
+	updateDirectory = fs.realpathSync('update'),
     targetDirectory = fs.realpathSync('target');
 
 // Define plugins
@@ -24,7 +25,11 @@ pluginNames.forEach(pluginName => {
     ['.strings', '.dlstrings', '.ilstrings'].forEach(type => {
         var input = path.join(sourceDirectory, pluginName + '_czech' + type),
             output = path.join(targetDirectory, 'Strings', pluginName.toLowerCase() + '_english' + type),
+            update = path.join(updateDirectory, pluginName.toLowerCase() + type + '.js'),
             strings = stringsReader.readFile(input);
+        if (fs.existsSync(update)) {
+        	Object.assign(strings, require(update));
+        }
         stringsWriter.writeFile(strings, output);
     });
 });
