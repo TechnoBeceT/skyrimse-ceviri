@@ -50,7 +50,8 @@ module.exports = {
     'SPEL': ['DESC', 'FULL'],
     'TACT': ['FULL'],
     'TREE': ['FULL'],
-    'WATR': ['FULL', 'DESC', 'FULL'],
+    'WATR': ['FULL'],
+    'WEAP': ['DESC', 'FULL'],
     'WOOP': ['FULL', 'TNAM'],
     'WRLD': ['FULL'],
 };
