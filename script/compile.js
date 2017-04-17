@@ -9,8 +9,8 @@ var fs = require('fs'),
 
 //Resolve directories
 var sourceDirectory = fs.realpathSync('source'),
-	shadowDirectory = fs.realpathSync('shadow'),
-	updateDirectory = fs.realpathSync('update'),
+    shadowDirectory = fs.realpathSync('shadow'),
+    updateDirectory = fs.realpathSync('update'),
     targetDirectory = fs.realpathSync('target');
 
 // Define plugins
@@ -22,6 +22,9 @@ var stringsReader = new parseStrings.StringsReader('cp1250'),
 
 // Determine whether the strings should have accents removed
 var unaccent = !!process.env.UNACCENT;
+if (unaccent) {
+    console.log('UNACCENT option detected...');
+}
 
 // Copy source to target
 pluginNames.forEach(pluginName => {
@@ -31,12 +34,12 @@ pluginNames.forEach(pluginName => {
             update = path.join(updateDirectory, pluginName.toLowerCase() + type + '.js'),
             strings = stringsReader.readFile(input);
         if (fs.existsSync(update)) {
-        	Object.assign(strings, require(update));
+            Object.assign(strings, require(update));
         }
         if (unaccent) {
-        	Object.keys(strings).forEach(key => {
-        		strings[key] = latinize(strings[key]);
-        	});
+            Object.keys(strings).forEach(key => {
+                strings[key] = latinize(strings[key]);
+            });
         }
         stringsWriter.writeFile(strings, output);
     });

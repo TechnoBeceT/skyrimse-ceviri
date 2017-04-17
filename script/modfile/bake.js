@@ -21,7 +21,7 @@ var ROOT_CONTEXT = 0,
     RECORD_CONTEXT = 2;
 
 var STATIC_REVISION = 0xFFFF,
-	STATIC_VERSION = 0x2C;
+    STATIC_VERSION = 0x2C;
 
 
 /**
@@ -29,21 +29,21 @@ var STATIC_REVISION = 0xFFFF,
  */
 class HeaderHandler {
 
-	constructor() {
-		this.parents = [];
-	}
+    constructor() {
+        this.parents = [];
+    }
 
     handleField(type, size, buffer, offset) {
-    	if (MODFILE_TYPES.MAST !== type) {
-    		return;
-    	}
-    	this.parents.push(buffer.toString('ascii', offset, offset + size - 1));
+        if (MODFILE_TYPES.MAST !== type) {
+            return;
+        }
+        this.parents.push(buffer.toString('ascii', offset, offset + size - 1));
     }
 
     parseParents(plugin, parse) {
-    	parse(this);
-    	this.parents.push(plugin + '.esm');
-    	return this.parents;
+        parse(this);
+        this.parents.push(plugin + '.esm');
+        return this.parents;
     }
 
 }
@@ -54,9 +54,9 @@ class HeaderHandler {
 class RecordBaker {
 
     constructor(plugin, strings) {
-    	// Current plugin
-    	this.plugin = plugin;
-    	// Current plugin strings (reset before each plugin)
+        // Current plugin
+        this.plugin = plugin;
+        // Current plugin strings (reset before each plugin)
         this.strings = strings;
         // Parent plugin names
         this.parents = [];
@@ -77,15 +77,15 @@ class RecordBaker {
     }
 
     processBake() {
-    	// Mark parent group
-    	this.context.parent.bake = true;
-    	// Mark parent record
-    	if (this.context._ === GROUP_CONTEXT && CONTEXT_TYPES.indexOf(this.context.type) > -1) {
-    		let head = this.context.parent.children.find(child => child.formId === this.context.label);
-    		if (head) { // Head record might be sibling of a parent group
-    			head.bake = true;
-    		}
-    	}
+        // Mark parent group
+        this.context.parent.bake = true;
+        // Mark parent record
+        if (this.context._ === GROUP_CONTEXT && CONTEXT_TYPES.indexOf(this.context.type) > -1) {
+            let head = this.context.parent.children.find(child => child.formId === this.context.label);
+            if (head) { // Head record might be sibling of a parent group
+                head.bake = true;
+            }
+        }
     }
 
     handleGroup(type, label, parse) {
@@ -101,22 +101,22 @@ class RecordBaker {
             label: label,
             bake: false
         };
-    	this.context.parent.children.push(this.context);
+        this.context.parent.children.push(this.context);
         // Parse children
         this.parseChildren(parse);
         // Check for bake requests
         if (this.context.bake) {
-        	this.processBake();
+            this.processBake();
         } else {
-        	this.context.children = []; // No need to keep children
+            this.context.children = []; // No need to keep children
         }
     }
 
     handleRecord(type, size, flags, formId, parse) {
         // Parse plugin header
         if (MODFILE_TYPES.TES4 === type) {
-        	this.parents = new HeaderHandler().parseParents(this.plugin, parse);
-        	return;
+            this.parents = new HeaderHandler().parseParents(this.plugin, parse);
+            return;
         }
         // Check if the record needs to be processed
         if (!BAKED_TYPES[type] && !MODFILE_TYPES[type]) {
@@ -144,7 +144,7 @@ class RecordBaker {
         this.parseChildren(parse);
         // Check for bake requests
         if (this.context.bake) {
-        	this.processBake();
+            this.processBake();
         }
     }
 
@@ -157,12 +157,12 @@ class RecordBaker {
         }
         // Check for EPFD type
         if (MODFILE_TYPES.EPFT === type) {
-    		this.context.epfd = buffer[offset] === 7;
-    	}
+            this.context.epfd = buffer[offset] === 7;
+        }
         // Check if baking
-    	var bake = this.context.watch[type] && size === 4;
-    	if (MODFILE_TYPES.EPFD === type && !this.context.epfd) {
-        	bake = false;
+        var bake = this.context.watch[type] && size === 4;
+        if (MODFILE_TYPES.EPFD === type && !this.context.epfd) {
+            bake = false;
         }
         // Get and check string reference
         var stringId = bake ? buffer.readUInt32LE(offset) : null;
@@ -173,10 +173,10 @@ class RecordBaker {
         // Fetch the translation to be baked
         var string = this.strings[stringId];
         if (string === undefined) {
-        	string = 'INVALID_REF';
+            string = 'INVALID_REF';
             console.error(`[WARN] Invalid string reference ` +
-            		`${MODFILE_TYPES.decode(this.context.type)}:${MODFILE_TYPES.decode(type)} ` +
-            		`in ${renderFormId(this.context.formId)}.`);
+                    `${MODFILE_TYPES.decode(this.context.type)}:${MODFILE_TYPES.decode(type)} ` +
+                    `in ${renderFormId(this.context.formId)}.`);
         }
         this.context.children.push(this.bakeField(type, string));
         this.context.bake = true; // Request baking of the whole stack
@@ -209,30 +209,30 @@ class RecordBaker {
         baked.writeUInt32LE(record.type);
         baked.writeUInt32LE(baked.length - 24, 4);
         baked.writeUInt32LE(record.flags, 8);
-    	baked.writeUInt32LE(record.formId, 12);
+        baked.writeUInt32LE(record.formId, 12);
         baked.writeUInt16LE(STATIC_VERSION, 20);
         baked.writeUInt16LE(0x0C, 22);
         // Handle overrides
         if (MODFILE_TYPES.REFR === record.type) {
-        	this.stack[0].overrideIds.push(record.formId);
+            this.stack[0].overrideIds.push(record.formId);
         }
         return baked;
     }
 
     bakeNode(node) {
-    	this.stack[0].count++;
-    	return node._ === GROUP_CONTEXT ? this.bakeGroup(node) : this.bakeRecord(node);
+        this.stack[0].count++;
+        return node._ === GROUP_CONTEXT ? this.bakeGroup(node) : this.bakeRecord(node);
     }
 
     bakeChildren(node) {
-    	return node.children.
-				filter(child => child.bake).
-				map(child => this.bakeNode(child));
+        return node.children.
+                filter(child => child.bake).
+                map(child => this.bakeNode(child));
     }
 
     bakeGroup(group) {
         var data = this.bakeChildren(group),
-        	baked = Buffer.concat([Buffer.alloc(24), ...data]);
+            baked = Buffer.concat([Buffer.alloc(24), ...data]);
         baked.writeUInt32LE(MODFILE_TYPES.GRUP);
         baked.writeUInt32LE(baked.length, 4);
         baked.writeUInt32LE(group.label, 8);
@@ -244,7 +244,7 @@ class RecordBaker {
 
     bakeHeader(author) {
         var root = this.stack[0],
-        	data = [];
+            data = [];
         // Write HEDR
         var hedrField = Buffer.alloc(18);
         hedrField.writeUInt32LE(MODFILE_TYPES.encode('HEDR'));
@@ -257,7 +257,7 @@ class RecordBaker {
         data.push(this.bakeField(MODFILE_TYPES.encode('CNAM'), author))
         // Write MAST
         this.parents.forEach(parent => {
-        	data.push(this.bakeField(MODFILE_TYPES.encode('MAST'), parent));
+            data.push(this.bakeField(MODFILE_TYPES.encode('MAST'), parent));
         });
         // Write DATA
         var dataField = Buffer.alloc(14);
@@ -289,10 +289,10 @@ class RecordBaker {
     }
 
     bakePlugin(author) {
-    	var data = this.bakeChildren(this.stack[0]),
-    		header = this.bakeHeader(author);
-    	console.log(`Baked ${this.stack[0].count} entries.`);
-    	return Buffer.concat([header, ...data]);
+        var data = this.bakeChildren(this.stack[0]),
+            header = this.bakeHeader(author);
+        console.log(`Baked ${this.stack[0].count} entries.`);
+        return Buffer.concat([header, ...data]);
     }
 
 }
