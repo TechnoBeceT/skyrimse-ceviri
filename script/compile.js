@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 'use strict';
 /**
  * Compile translations into final STRINGS files.
