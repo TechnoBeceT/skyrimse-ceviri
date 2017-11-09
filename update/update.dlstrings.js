@@ -9,7 +9,12 @@ Nabídka Pořadí načtení ti umožní spravovat stažené modifikace.
 Povolit / Zakázat / Smazat: Povol modifikaci, se kterou chceš hrát. Pokud s modifikací již hrát nechceš, zakaž ji nebo ji smaž.
 
 Změna pořadí: Změna pořadí modifikací ti umožní určit prioritu načítaných modifikací. Změna pořadí načtení je důležitá, pokud používáš více modifikací najednou a je třeba řešit jejich vzájemné konflikty. `,
+    0x000070: 'Mazlíček je o 100 % nenápadnější.',
+    0x000072: 'Nejdříve musíš propustit jednoho ze svých současných mazlíčků.',
+    0x00008E: 'Mazlíček na tebe bude čekat ve zvolené lokaci.',
     0x010D58: 'Stisknutím [Move] se pohybuješ nebo běžíš, pomocí [Jump] vyskočíš. Stisknutím [Sprint] můžeš sprintovat. Sprintování spotřebovává výdrž.',
     0x010D85: 'Stisknutím [Forward]/[Back]/[Strafe Left]/[Strafe Right] se pohybuješ nebo běžíš, pomocí [Jump] vyskočíš. Stisknutím [Sprint] můžeš sprintovat. Sprintování spotřebovává výdrž.',
+    0x010E18: 'Všechna kouzla stojí o <15> % méně, mana se obnovuje o <100> % rychleji.',
+    0x0125C5: 'Všechna kouzla stojí o <15> % méně many, +<50> many, mana se obnovuje o <100> % rychleji.',
     0x01269D: 'Stisknutím [Sprint] můžeš sprintovat. Sprint spotřebovává výdrž.'
 };
