@@ -135,13 +135,14 @@ class RecordBaker {
             bake: false
         };
         this.context.parent.children.push(this.context);
-        // Remember last INFO
-        if (MODFILE_TYPES.INFO === type) {
-            this.context.previous = this.context.parent.lastInfo || 0;
-            this.context.parent.lastInfo = formId; // XXX
-        }
         // Parse fields
         this.parseChildren(parse);
+        // Process INFO ordering
+        if (MODFILE_TYPES.INFO === type) {
+            // Game is OK with out of order PNAM (unlike xEdit)
+            this.context.children.push(this.bakeField(MODFILE_TYPES.PNAM, this.context.parent.lastInfo || 0));
+            this.context.parent.lastInfo = formId;
+        }
         // Check for bake requests
         if (this.context.bake) {
             this.processBake();
@@ -182,12 +183,12 @@ class RecordBaker {
         this.context.bake = true; // Request baking of the whole stack
     }
 
-    bakeField(type, string) {
-        var length = Buffer.byteLength(string),
-            buffer = Buffer.alloc(7 + length);
+    bakeField(type, value) {
+        var length = typeof value === 'string' ? Buffer.byteLength(value) + 1: 4,
+            buffer = Buffer.alloc(6 + length);
         buffer.writeUInt32LE(type);
-        buffer.writeUInt16LE(length + 1, 4);
-        buffer.write(string, 6);
+        buffer.writeUInt16LE(length, 4);
+        buffer[typeof value === 'string' ? 'write' : 'writeUInt32LE'](value, 6);
         return buffer;
     }
 
