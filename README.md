@@ -1,6 +1,5 @@
 # Skyrim SE yerelleştirme düzenlemesi
 
-Projekt slouží pro *re-packaging* původních originálních překladů Skyrim do modifikací vhodných pro Bethesda.net.
 Proje, orjinal skyrim çevirilerini yeniden paketlemek ve Bethesda.net'e uygun modifikasyonlar yapmak içindir.
 
 ## Klasör dağılımı
