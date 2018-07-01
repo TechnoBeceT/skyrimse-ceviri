@@ -1,34 +1,35 @@
-# Lokalizační modifikace Skyrim SE
+# Skyrim SE yerelleştirme düzenlemesi
 
 Projekt slouží pro *re-packaging* původních originálních překladů Skyrim do modifikací vhodných pro Bethesda.net.
+Proje, orjinal skyrim çevirilerini yeniden paketlemek ve Bethesda.net'e uygun modifikasyonlar yapmak içindir.
 
-## Rozdělení složek
+## Klasör dağılımı
 
- * `script/` - NodeJS skripty pro práci s projektem
- * `shadow/` - ESM soubory Skyrim SE (použité při zapékání překladu)
- * `source/` - zdrojové překlady (složka `Data/Strings` s původními českými překlady)
- * `target/` - soubory finální modifikace
- * `update/` - nové a upravené překlady pro Skyrim SE
+ * `script/` - Proje çalışması için NodeJS komut dosyaları
+ * `shadow/` - Skyrim SE - ESM Dosyaları(çeviri için kullanılır)
+ * `source/` - Kaynak çevirileri (Orijinal Türkçe çevirileri olan Data / Strings klasörü)
+ * `target/` - Final değişim yapılmış dosyalar
+ * `update/` - Skyrim SE için yeni ve uyarlanmış çeviriler
 
-## Skripty v projektu
+## Projedeki komut dosyaları
 
-Skripty v projektu jsou NodeJS skripty. Pro spuštění skriptu je nutná instalace závislostí pomocí příkazu `npm install`.
+Projedeki scriptler NodeJS betikleridir. Komut dosyasını çalıştırmak için `npm install` kullanarak bağımlılıkları kurmak gerekir.
 
-    node script/nazev_skriptu.js [parametry]
+    node komut script/script_name.js [parametreler]
 
-Existující skripty (pro informace o parametrech stačí spustit s `--help`):
+Varolan komut dosyaları (parametre bilgisi için sadece '--help' ile çalıştırın):
 
- * `compile.js` - vytvoří finální STRINGS soubory překladu pro vložení do hry
- * `modfile.js` - zapeče vytvořené překlady do samostatných ESP souborů
- * `strings.js` - vyhledávání v překladových STRINGS souborech
+ * `compile.js` - oyuna eklenecek son STRING çeviri dosyasını oluşturacak
+ * `modfile.js` - çevirileri ayrı ESP dosyalarına gömer
+ * `strings.js` - çevirileri STRINGS dosyasında arama
 
-## Sestavení pro PC a XB1
+## SPC ve XB1 ayarları
 
-Na PC a XB1 stačí zavolat skript `node script/compile`, který vytvoří STRINGS soubory do složky `target`.
-Následně je potřeba v rámci Creation Kit vytvořit prázdnou modifikaci a složky `interface` a `strings` zabalit do přidruženého archivu.
+PC ve XB1'de hedef klasöründe STRINGS dosyası oluşturmak için `node script/compile` komut dosyasını çağırmanız yeterlidir.
+Oluşturma Kitinde boş bir değişiklik oluşturmak ve ilgili arabirimde `interface` ve `string` leri klasörlerini sarmak gereklidir.
 
-## Sestavení pro PS4
+## PS4 için tek bir esp oluştur
 
-Pro PS4 je potřeba nejdříve vytvořit překlady bez diakritiky pomocí `UNACCENT=1 node script/compile`.
-Následně je možné skriptem `node script/modfile` sestavit oddělené modifikace se zapečenými překlady.
-Vytvoření jednotného pluginu je nutné udělat přes [Merge Plugin](http://www.nexusmods.com/skyrim/mods/69905/) utilitu.
+PS4 için, önce "UNACCENT = 1 node script / compile" kullanarak aksatmadan çeviriler oluşturmanız gerekir.
+Daha sonra, “node script / modfile”, sıkışmış çevirilerle ayrı değişiklikleri derlemek için kullanılabilir.
+Birleştirilmiş eklenti oluşturma [Birleştirme Eklentisi] (http://www.nexusmods.com/skyrim/mods/69905/) yardımcı programı aracılığıyla yapılır.
