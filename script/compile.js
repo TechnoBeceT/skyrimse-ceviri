@@ -1,36 +1,37 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Compile translations into final STRINGS files.
+ * Çevirileri güncel STRINGS dosyalarına derleyin.
  */
 var fs = require('fs'),
     path = require('path'),
     latinize = require('latinize'),
     parseStrings = require('./parse/parse-strings');
 
-//Resolve directories
+//Dizinleri Çöz
 var sourceDirectory = fs.realpathSync('source'),
     shadowDirectory = fs.realpathSync('shadow'),
     updateDirectory = fs.realpathSync('update'),
     targetDirectory = fs.realpathSync('target');
 
-// Define plugins
+// Eklentileri tanımla
 var pluginNames = ['Skyrim', 'Update', 'Dawnguard', 'HearthFires', 'Dragonborn'];
 
-// Prepare reader and writer
-var stringsReader = new parseStrings.StringsReader('cp1250'),
+// Okuma ve yazma kodlamasını ayarla
+var stringsReader = new parseStrings.StringsReader('cp1254'),
     stringsWriter = new parseStrings.StringsWriter('utf-8');
 
-// Determine whether the strings should have accents removed
+/* Dizelerden kaldırılması gereken türkçe karakter olup olmadığını belirleme. 
+Çift ünlem türkçe karakterli, tek ünlem türkçe karakterleri kaldırır.*/
 var unaccent = !!process.env.UNACCENT;
 if (unaccent) {
-    console.log('UNACCENT option detected...');
+    console.log('Türkçe Karakter düzeltme opsiyonu tespit edildi...');
 }
 
-// Copy source to target
+// Kaynağı hedefe kopyala
 pluginNames.forEach(pluginName => {
     ['.strings', '.dlstrings', '.ilstrings'].forEach(type => {
-        var input = path.join(sourceDirectory, pluginName + '_czech' + type),
+        var input = path.join(sourceDirectory, pluginName + '_turkish' + type),
             output = path.join(targetDirectory, 'Strings', pluginName.toLowerCase() + '_english' + type),
             update = path.join(updateDirectory, pluginName.toLowerCase() + type + '.js'),
             strings = stringsReader.readFile(input);
