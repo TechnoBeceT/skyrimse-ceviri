@@ -18,8 +18,8 @@ Projedeki scriptler NodeJS betikleridir. Komut dosyasını çalıştırmak için
 
 Varolan komut dosyaları (parametre bilgisi için sadece '--help' ile çalıştırın):
 
- * `compile.js` - oyuna eklenecek son STRING çeviri dosyasını oluşturacak
- * `modfile.js` - çevirileri ayrı ESP dosyalarına gömer
+ * `compile.js` - oyuna eklenecek olan Strings dosyalarının güncel halini çıkartır
+ * `modfile.js` - hazırlanan güncel strings dosyalarını esp dosyalarına gömer.
  * `strings.js` - çevirileri STRINGS dosyasında arama
 
 ## SPC ve XB1 ayarları
