@@ -1,5 +1,5 @@
 /**
- * Render FORM ID as string
+ * Dize olarak FORM Kimliği Oluşturma
  */
 module.exports = function renderFormId(formId) {
     var hexId = (formId | 0).toString(16).toUpperCase();
