@@ -14,7 +14,7 @@ Proje, orjinal skyrim çevirilerini yeniden paketlemek ve Bethesda.net'e uygun m
 
 Projedeki scriptler NodeJS betikleridir. Komut dosyasını çalıştırmak için `npm install` kullanarak bağımlılıkları kurmak gerekir.
 
-    node komut script/script_name.js [parametreler]
+    node script/komut_adı.js [parametreler]
 
 Varolan komut dosyaları (parametre bilgisi için sadece '--help' ile çalıştırın):
 
@@ -29,6 +29,6 @@ Oluşturma Kitinde boş bir değişiklik oluşturmak ve ilgili arabirimde `inter
 
 ## PS4 için tek bir esp oluştur
 
-PS4 için, önce "UNACCENT = 1 node script / compile" kullanarak aksatmadan çeviriler oluşturmanız gerekir.
+PS4 için, önce "UNACCENT = 1 node script/compile" kullanarak aksatmadan çeviriler oluşturmanız gerekir.
 Daha sonra, “node script / modfile”, sıkışmış çevirilerle ayrı değişiklikleri derlemek için kullanılabilir.
 Birleştirilmiş eklenti oluşturma [Birleştirme Eklentisi] (http://www.nexusmods.com/skyrim/mods/69905/) yardımcı programı aracılığıyla yapılır.
