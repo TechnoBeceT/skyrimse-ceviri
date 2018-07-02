@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Bake strings into final MODFILE.
+ * Son Mod dosyasına güncel strings dosyalarını göm.
  */
 var fs = require('fs'),
     path = require('path'),
@@ -10,14 +10,14 @@ var fs = require('fs'),
     parseStrings = require('./parse/parse-strings'),
     modfileBake = require('./modfile/bake');
 
-// Resolve directories
+//Dizinleri Çöz
 var shadowDirectory = fs.realpathSync('shadow'),
     targetDirectory = fs.realpathSync('target');
 
-//Define plugins
+// Eklentileri tanımla
 var pluginNames = ['Skyrim', 'Update', 'Dawnguard', 'HearthFires', 'Dragonborn'];
 
-// Read strings for plugin with the specified name
+// Belirtilen isme sahip mod dizelerini oku
 function readStrings(pluginName) {
     var stringsReader = new parseStrings.StringsReader();
     return ['.strings', '.dlstrings', '.ilstrings'].reduce((strings, type) => {
@@ -26,7 +26,7 @@ function readStrings(pluginName) {
     }, {});
 }
 
-// Read plugin modfile using the given handler
+// Verilen işleyiciyi kullanarak eklenti mod dosyasını oku
 function readModfile(pluginName, handler) {
     var modfilePath = path.join(shadowDirectory, pluginName + '.esm'),
         modfileSource = new parseSource.FileSource(modfilePath),
@@ -37,8 +37,8 @@ function readModfile(pluginName, handler) {
 
 pluginNames.forEach((pluginName, index) => {
     var recordBaker = new modfileBake.RecordBaker(pluginName, readStrings(pluginName)),
-        resultName = 'cze0' + index + 'p.esp';
-    console.log('Baking plugin ' + pluginName + ' as ' + resultName + '.');
+        resultName = 'tr0' + index + 'p.esp';
+    console.log(pluginName + ' Eklentisi ' + resultName + ' olarak oluşturuldu');
     readModfile(pluginName, recordBaker);
     fs.writeFileSync(path.join(targetDirectory, resultName), recordBaker.bakePlugin('DEFAULT'));
 });
