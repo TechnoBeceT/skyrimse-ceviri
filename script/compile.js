@@ -18,7 +18,7 @@ var sourceDirectory = fs.realpathSync('source'),
 var pluginNames = ['Skyrim', 'Update', 'Dawnguard', 'HearthFires', 'Dragonborn'];
 
 // Prepare reader and writer
-var stringsReader = new parseStrings.StringsReader('cp1250'),
+var stringsReader = new parseStrings.StringsReader('utf-8'),
     stringsWriter = new parseStrings.StringsWriter('utf-8');
 
 // Determine whether the strings should have accents removed
@@ -30,7 +30,7 @@ if (unaccent) {
 // Copy source to target
 pluginNames.forEach(pluginName => {
     ['.strings', '.dlstrings', '.ilstrings'].forEach(type => {
-        var input = path.join(sourceDirectory, pluginName + '_czech' + type),
+        var input = path.join(sourceDirectory, pluginName + '_english' + type),
             output = path.join(targetDirectory, 'Strings', pluginName.toLowerCase() + '_english' + type),
             update = path.join(updateDirectory, pluginName.toLowerCase() + type + '.js'),
             strings = stringsReader.readFile(input);

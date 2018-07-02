@@ -1,34 +1,30 @@
-# Lokalizační modifikace Skyrim SE
+# Localization project for Skyrim SE
 
-Projekt slouží pro *re-packaging* původních originálních překladů Skyrim do modifikací vhodných pro Bethesda.net.
+Project for *re-packaging* of Skyrim SE translation into console friendly mods that can be uploaded to Bethesda.net.
 
-## Rozdělení složek
+## Project folders
 
- * `script/` - NodeJS skripty pro práci s projektem
- * `shadow/` - ESM soubory Skyrim SE (použité při zapékání překladu)
- * `source/` - zdrojové překlady (složka `Data/Strings` s původními českými překlady)
- * `target/` - soubory finální modifikace
- * `update/` - nové a upravené překlady pro Skyrim SE
+ * `script/` - localization processing scripts
+ * `shadow/` - Skyrim SE master files (`*.esm` files)
+ * `source/` - game localization files (`Data/Strings` folder with target strings)
+ * `target/` - target output directory
 
-## Skripty v projektu
+## Project scripts
 
-Skripty v projektu jsou NodeJS skripty. Pro spuštění skriptu je nutná instalace závislostí pomocí příkazu `npm install`.
+Project scripts run under NodeJS. Run `npm install` to initialize dependencies (one time operation).
 
-    node script/nazev_skriptu.js [parametry]
+Existing scripts:
 
-Existující skripty (pro informace o parametrech stačí spustit s `--help`):
+ * `compile.js` - creates final translation STRINGS files for the game (suitable for Xbox)
+ * `modfile.js` - bakes compiled translations into ESP plugin files (suitable for PS4)
 
- * `compile.js` - vytvoří finální STRINGS soubory překladu pro vložení do hry
- * `modfile.js` - zapeče vytvořené překlady do samostatných ESP souborů
- * `strings.js` - vyhledávání v překladových STRINGS souborech
+## Creating PC and XB1 modification
 
-## Sestavení pro PC a XB1
+Run `node script/compile` to build STRINGS files inside `target` folder.
+Then create empty modification inside Creation Kit and pack `interface` and `strings` files into companion BA2 archive.
 
-Na PC a XB1 stačí zavolat skript `node script/compile`, který vytvoří STRINGS soubory do složky `target`.
-Následně je potřeba v rámci Creation Kit vytvořit prázdnou modifikaci a složky `interface` a `strings` zabalit do přidruženého archivu.
+## Creating PS4 modification
 
-## Sestavení pro PS4
-
-Pro PS4 je potřeba nejdříve vytvořit překlady bez diakritiky pomocí `UNACCENT=1 node script/compile`.
-Následně je možné skriptem `node script/modfile` sestavit oddělené modifikace se zapečenými překlady.
-Vytvoření jednotného pluginu je nutné udělat přes [Merge Plugin](http://www.nexusmods.com/skyrim/mods/69905/) utilitu.
+PS4 translation strings must be compiled with transliteration enabled via `UNACCENT=1 node script/compile`.
+Create separate plugin files with baked-in translations using `node script/modfile`.
+Then create single modification using [Merge Plugin](http://www.nexusmods.com/skyrim/mods/69905/) tool.
