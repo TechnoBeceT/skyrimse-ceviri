@@ -1,6 +1,6 @@
 # Skyrim SE yerelleştirme düzenlemesi
 
-Proje, orjinal skyrim çevirilerini yeniden paketlemek ve Bethesda.net'e uygun modifikasyonlar yapmak içindir.
+ Skyrim SE çevirisinin, Bethesda.net'e yüklenebilecek konsol dostu moda dönüştürme projesi.
 
 ## Klasör dağılımı
 
@@ -18,17 +18,15 @@ Projedeki scriptler NodeJS betikleridir. Komut dosyasını çalıştırmak için
 
 Varolan komut dosyaları (parametre bilgisi için sadece '--help' ile çalıştırın):
 
- * `compile.js` - oyuna eklenecek olan Strings dosyalarının güncel halini çıkartır
- * `modfile.js` - hazırlanan güncel strings dosyalarını esp dosyalarına gömer.
- * `strings.js` - çevirileri STRINGS dosyasında arama
+ * `compile.js` - Oyun için son çeviri STRINGS dosyaları oluşturur (Xbox için uygun)
+ * `modfile.js` - ESP osyalarına derlenmiş çevirileri gömer (PS4 için uygun)
+ * `strings.js` - Strings dosyaları ile işlem yapmak için.
 
 ## SPC ve XB1 ayarları
 
-PC ve XB1'de hedef klasöründe STRINGS dosyası oluşturmak için `node script/compile` komut dosyasını çağırmanız yeterlidir.
-Oluşturma Kitinde boş bir değişiklik oluşturmak ve ilgili arabirimde `interface` ve `string` leri klasörlerini sarmak gereklidir.
-
+XB1 uyumlu stringsleri `target` klasörüne oluşturmak için node script/compile komutunu çalıştırın. Sonrasında Creation Kit üzerinden boş bir değişiklik yapıp, strings ve interface klasörünü ba2 arşivi olarak oluşturun.
 ## PS4 için tek bir esp oluştur
 
-PS4 için, önce "UNACCENT = 1 node script/compile" kullanarak aksatmadan çeviriler oluşturmanız gerekir.
-Daha sonra, “node script / modfile”, sıkışmış çevirilerle ayrı değişiklikleri derlemek için kullanılabilir.
-Birleştirilmiş eklenti oluşturma [Birleştirme Eklentisi] (http://www.nexusmods.com/skyrim/mods/69905/) yardımcı programı aracılığıyla yapılır.
+PS4 çeviri dizeleri `node script/compile` ile etkinleştirilen UNACCENT = 1 opsiyonunu açarak transliterasyon ile derlenmelidir.
+`node script/modfile` komutunu kullanarak, eklentilere göre çevirileri ayrı esp dosyalarına gömün. Daha sonrasında [Merge Plugin](http://www.nexusmods.com/skyrim/mods/69905/) kullanarak tek bir mod dosyası oluşturun.
+ 
