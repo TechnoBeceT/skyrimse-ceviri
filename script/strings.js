@@ -30,7 +30,26 @@ program.
             output.write(`[MATCH] ${renderedId} ${JSON.stringify(strings[stringId])}\n`);
         });
     });
-
+program.
+    command('export <file>').
+    description('Export translation strings.').
+    action(file => {
+        var strings = readStrings(file);
+        output.write(JSON.stringify(strings, null, '    '));
+    });
+	
+	program.
+    command('export2 <file>').
+    description('Export translation strings.').
+    action(file => {
+        var strings = readStrings(file);
+        output.write("module.exports = {\n");
+        Object.keys(strings).forEach(stringId => {
+            var escaped = strings[stringId].replace(/([`\\])/g, '\\$1');
+            output.write("    0x" + renderStringId(stringId).substring(3, 9) + ": " + escaped + ",\n");
+        });
+        output.write("};\n");
+    });
 program.
     command('diff <first> <second>').
     description('Compare two STRINGS files and find differences.').
