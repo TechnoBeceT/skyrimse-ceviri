@@ -3,12 +3,10 @@
 var parseStrings = require('./parse/parse-strings'),
     renderStringId = require('./utils/render-formId'),
     program = require('commander'),
-    fs = require('fs');
+    output = require('./utils/program-output')(program);
 
 program.
-    option('-o --output <file>', 'Export STRINGS to a file.');
-
-var output = program.output ? fs.createWriteStream(program.output, 'wx') : process.stdout;
+    option('-o --output <file>', 'write output to the specified file');
 
 function readStrings(filePath) {
     return new parseStrings.StringsReader().readFile(filePath);
@@ -17,8 +15,8 @@ function readStrings(filePath) {
 program.
     command('find <pattern>').
     description('Search for text in STRINGS.').
-    option('-s, --strings <file>', 'Path to a STRINGS file.').
-    option('-f, --flags <flags>', 'Additional regexp flags.').
+    option('-s, --strings <file>', 'path to a STRINGS file').
+    option('-f, --flags <flags>', 'additional regexp flags').
     action((pattern, options) => {
         var strings = readStrings(options.strings),
             regexp = new RegExp(pattern, options.flags)
@@ -52,10 +50,21 @@ program.
         });
     });
 
+program.
+    command('export <file>').
+    description('Export translation strings.').
+    action(file => {
+        var strings = readStrings(file);
+        output.write("module.exports = {\n");
+        Object.keys(strings).forEach(stringId => {
+            var escaped = strings[stringId].replace(/([`\\])/g, '\\$1');
+            output.write("    0x" + renderStringId(stringId).substring(3, 9) + ": `" + escaped + "`,\n");
+        });
+        output.write("};\n");
+    });
+
 program.parse(process.argv);
-if (program.output) {
-    output.end();
-}
+output.close();
 if (!program.args.length) {
     program.help();
 }
