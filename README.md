@@ -1,6 +1,6 @@
 # Skyrim SE yerelleştirme düzenlemesi
 
- Skyrim SE çevirisinin, Bethesda.net'e yüklenebilecek konsol dostu moda dönüştürme projesi.
+ Skyrim SE çevirisinin, Bethesda.net'e yüklenebilecek konsol dostu moda dönüştürme projesi
 
 ## Klasör dağılımı
 
