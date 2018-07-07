@@ -1,18 +1,18 @@
-# Eclipse files
+# Eclipse dosyaları
 .project
 .settings
 
-# Node files
+# Node Dosyaları
 node_modules
 
-# Source (original translations)
+# Kaynak (orjinal çeviriler)
 source
 
-# Shadow folder (plugin data files)
+# Gölge Klasörü (eklenti dosyaları)
 shadow
 
-# Working directory
+# Çalışma Dizini
 .tmp
 
-# Ignored target
+# Yoksayılmış hedef
 target/*.esp
