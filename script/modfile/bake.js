@@ -7,7 +7,7 @@ var parseModfile = require('../parse/parse-modfile'),
 
 var MODFILE_TYPES = new parseModfile.ModfileType([
         'TES4', 'GRUP', 'GMST', 'EDID', 'DATA', 'INFO', 'BOOK', 'REFR', 'MAST',
-        'QUST', 'DIAL', 'WRLD', 'CELL', 'EPFT', 'EPFD'
+        'QUST', 'DIAL', 'WRLD', 'CELL', 'EPFT', 'EPFD', 'PNAM'
     ]),
     BAKED_TYPES = new parseModfile.ModfileType(Object.keys(bakeDefs)),
     WATCHED_TYPES = Object.keys(bakeDefs).reduce((watched, type) => {
@@ -23,6 +23,7 @@ var ROOT_CONTEXT = 0,
 var STATIC_REVISION = 0xFFFF,
     STATIC_VERSION = 0x2C;
 
+var PNAM_AFTER = ['EDID', 'VMAD', 'DATA', 'ENAM'].map(MODFILE_TYPES.encode);
 
 /**
  * HEDR field handler.
@@ -88,6 +89,11 @@ class RecordBaker {
         }
     }
 
+    insertField(field, after) {
+        const idx = this.context.children.findIndex(child => after.indexOf(child.readUInt32LE(0)) < 0);
+        this.context.children.splice(idx >= 0 ? idx : this.context.children.length, 0, field);
+    }
+
     handleGroup(type, label, parse) {
         if (type === 0 && !BAKED_TYPES[label]) {
             return; // No need to bake this top-level group
@@ -139,8 +145,9 @@ class RecordBaker {
         this.parseChildren(parse);
         // Process INFO ordering
         if (MODFILE_TYPES.INFO === type) {
-            // Game is OK with out of order PNAM (unlike xEdit)
-            this.context.children.push(this.bakeField(MODFILE_TYPES.PNAM, this.context.parent.lastInfo || 0));
+            if (this.context.children.findIndex(field => field.readUInt32LE(0) == MODFILE_TYPES.PNAM) < 0) {
+                this.insertField(this.bakeField(MODFILE_TYPES.PNAM, this.context.parent.lastInfo || 0), PNAM_AFTER);
+            }
             this.context.parent.lastInfo = formId;
         }
         // Check for bake requests
