@@ -7,7 +7,7 @@ var parseModfile = require('../parse/parse-modfile'),
 
 var MODFILE_TYPES = new parseModfile.ModfileType([
         'TES4', 'GRUP', 'GMST', 'EDID', 'DATA', 'INFO', 'BOOK', 'REFR', 'MAST',
-        'QUST', 'DIAL', 'WRLD', 'CELL', 'EPFT', 'EPFD', 'PNAM'
+        'QUST', 'DIAL', 'WRLD', 'CELL', 'EPFT', 'EPFD', 'PNAM', 'AVIF', 'AVSK'
     ]),
     BAKED_TYPES = new parseModfile.ModfileType(Object.keys(bakeDefs)),
     WATCHED_TYPES = Object.keys(bakeDefs).reduce((watched, type) => {
@@ -145,10 +145,16 @@ class RecordBaker {
         this.parseChildren(parse);
         // Process INFO ordering
         if (MODFILE_TYPES.INFO === type) {
-            if (this.context.children.findIndex(field => field.readUInt32LE(0) == MODFILE_TYPES.PNAM) < 0) {
+            if (this.context.children.findIndex(field => field.readUInt32LE(0) === MODFILE_TYPES.PNAM) < 0) {
                 this.insertField(this.bakeField(MODFILE_TYPES.PNAM, this.context.parent.lastInfo || 0), PNAM_AFTER);
             }
             this.context.parent.lastInfo = formId;
+        }
+        // Reset AVIF skill modifier
+        if (this.context.type === MODFILE_TYPES.AVIF) {
+            this.context.children.filter(field => field.readUInt32LE(0) === MODFILE_TYPES.AVSK).forEach(field => {
+                field.writeFloatLE(1, 6);
+            });
         }
         // Check for bake requests
         if (this.context.bake) {
@@ -164,12 +170,12 @@ class RecordBaker {
             }
         }
         // Check for EPFD type
-        if (MODFILE_TYPES.EPFT === type) {
+        if (type === MODFILE_TYPES.EPFT) {
             this.context.epfd = buffer[offset] === 7;
         }
         // Check if baking
         var bake = this.context.watch[type] && size === 4;
-        if (MODFILE_TYPES.EPFD === type && !this.context.epfd) {
+        if (type === MODFILE_TYPES.EPFD && !this.context.epfd) {
             bake = false;
         }
         // Get and check string reference
