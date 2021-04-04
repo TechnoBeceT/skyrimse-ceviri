@@ -150,8 +150,8 @@ class RecordBaker {
             }
             this.context.parent.lastInfo = formId;
         }
-        // Reset AVIF skill modifier
-        if (this.context.type === MODFILE_TYPES.AVIF) {
+        // Reset AVIF skill modifier for Smithing
+        if (this.context.type === MODFILE_TYPES.AVIF && formId === 0x450) {
             this.context.children.filter(field => field.readUInt32LE(0) === MODFILE_TYPES.AVSK).forEach(field => {
                 field.writeFloatLE(1, 6);
             });
